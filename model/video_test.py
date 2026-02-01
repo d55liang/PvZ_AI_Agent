@@ -2,11 +2,11 @@ from ultralytics import YOLO
 import cv2
 import numpy as np 
 
-MODEL_PATH = "model/runs/detect/train3/weights/best.pt"
+MODEL_PATH = "model/runs/detect/train4/weights/best.pt"
 INPUT_VIDEO = "data/videos/input.mp4"
 OUTPUT_VIDEO = "data/videos/output.mp4"
 
-conf = 0.25
+conf = 0.40
 
 model = YOLO(MODEL_PATH)
 
@@ -29,9 +29,9 @@ while True:
     for box in results.boxes:   
         x0, y0, x1, y1 = map(int, box.xyxy[0].tolist())
         cls = int(box.cls[0])
-        conf = float(box.conf[0])
+        conf_val = float(box.conf[0])
     
-        label = f"{model.names[cls]} {conf:.2f}"
+        label = f"{model.names[cls]} {conf_val:.2f}"
         cv2.rectangle(frame, (x0, y0), (x1, y1), (0, 0, 255), 2)
         cv2.putText(frame, label, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 1)
 
