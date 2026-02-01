@@ -36,3 +36,5 @@ Thumbs.db
 # If your PVZ project generates local runtime output/logs:
 logs/
 *.log
+# ignore local video data
+/data/videos/*.mp4
