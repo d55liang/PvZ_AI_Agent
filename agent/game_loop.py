@@ -31,7 +31,8 @@ GRID_PATH = "configs/grid.json"
 LAWN_PATH = "configs/lawn.json"
 SEED_PATH = "configs/seed.json"
 
-DEFAULT_YOLO = "model/runs/detect/train5/weights/best.pt"
+DEFAULT_YOLO = "model/runs/detect/train5/weights/best.onnx"
+FALLBACK_YOLO_PT = "model/runs/detect/train5/weights/best.pt"
 DEFAULT_CNN = "model/runs/cnn/best.pt"
 NUM_ROWS = 5
 NUM_COLS = 9
@@ -395,7 +396,11 @@ def collect_suns(
 
 
 def run(yolo_path: str, cnn_path: str, conf: float, imgsz: int, show: bool = False):
-    yolo = YOLO(yolo_path)
+    selected_yolo_path = yolo_path
+    if yolo_path.endswith(".onnx") and not Path(yolo_path).exists() and Path(FALLBACK_YOLO_PT).exists():
+        selected_yolo_path = FALLBACK_YOLO_PT
+    yolo = YOLO(selected_yolo_path)
+    print(f"YOLO model: {selected_yolo_path}", flush=True)
     cnn_model, tf, empty_idx, device = load_cnn_model(cnn_path)
 
     lawn_region = load_lawn_region()
