@@ -36,5 +36,28 @@ Thumbs.db
 # If your PVZ project generates local runtime output/logs:
 logs/
 *.log
-# ignore local video data
-/data/videos/*.mp4
+# local runtime/calibration output
+configs/seed.json
+
+# ignore local/raw data
+/data/videos
+/data/cnn_cells
+/data/frames
+/data/pvz_yolo
+/data/pvz_dataset
+
+# training caches/artifacts (keep actual model weights)
+*.cache
+/model/runs/**/.DS_Store
+/model/runs/**/train_batch*.jpg
+/model/runs/**/val_batch*.jpg
+/model/runs/**/confusion_matrix*.png
+/model/runs/**/Box*_curve.png
+/model/runs/**/results.png
+/model/runs/**/results.csv
+/model/runs/**/labels.jpg
+/model/runs/**/args.yaml
+
+# temporary: exclude model binaries from git
+*.pt
+*.onnx

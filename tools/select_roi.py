@@ -31,9 +31,9 @@ def main():
             cv2.putText(sc, str(i + 1), (x + 10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
 
         if len(points) == 2:
-            (x0, y0), (x1, y0) = points[0], points[1]
+            (x0, y0), (x1, y1) = points[0], points[1]
             left, right =  sorted([x0, x1])
-            top, bottom = sorted([y0, y0])
+            top, bottom = sorted([y0, y1])
             cv2.rectangle(sc, (left, top), (right, bottom), (0, 255, 0), 1)
 
         cv2.imshow("Click top left and bottom right of the PvZ window." 
