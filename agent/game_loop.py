@@ -82,7 +82,6 @@ def normalize_label(raw_label: str) -> str | None:
     if key in ZOMBIE_LABEL_MAP:
         return ZOMBIE_LABEL_MAP[key]
 
-    # Robust fallback for wider YOLO label space.
     if "zombie" not in key:
         return None
     if "bucket" in key:
@@ -93,7 +92,6 @@ def normalize_label(raw_label: str) -> str | None:
         return "flag"
     if "pole" in key:
         return "pole_vaulting"
-    # Unknown zombie types default to ordinary threat.
     return "ordinary"
 
 
@@ -307,7 +305,6 @@ def classify_board(
         pred_idx = int(pred[i].item())
         conf = float(conf_vals[i].item())
         is_empty = pred_idx == empty_idx
-        # Reduce false occupied cells: low-confidence non-empty -> empty.
         if (not is_empty) and conf < OCCUPANCY_MIN_CONF:
             is_empty = True
         board[(r, c)] = "empty" if is_empty else "non_empty"
@@ -378,11 +375,9 @@ def collect_suns(
         x_abs = lawn_region["left"] + int(x_local)
         y_abs = lawn_region["top"] + int(y_local)
 
-        # Skip re-clicking near the most recent sun click for a few frames.
         if recent_click is not None and _dist2((x_abs, y_abs), recent_click) < recent_dist2:
             continue
 
-        # Skip near-duplicate centers in the same frame.
         if any(_dist2((x_abs, y_abs), p) < min_dist2 for p in clicked):
             continue
 
@@ -445,7 +440,6 @@ def run(yolo_path: str, cnn_path: str, conf: float, imgsz: int, show: bool = Fal
                 if recent_sun_click_ttl <= 0:
                     recent_sun_click = None
 
-            # mss returns BGRA; try both channel orders and keep the stronger zombie result.
             frame_bgr = np.array(sct.grab(lawn_region))[:, :, :3]
             frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
 
@@ -476,7 +470,6 @@ def run(yolo_path: str, cnn_path: str, conf: float, imgsz: int, show: bool = Fal
                 cnn_occ_conf = raw_non_empty_conf.get(rc, 0.0)
                 cnn_empty_conf = raw_empty_conf.get(rc, 0.0)
 
-                # YOLO-first occupancy with CNN as soft confirmation/veto.
                 occupied = yolo_occ
                 if not yolo_occ and cnn_occ and cnn_occ_conf >= CNN_SOFT_OCCUPY_CONF:
                     occupied = True
@@ -497,8 +490,6 @@ def run(yolo_path: str, cnn_path: str, conf: float, imgsz: int, show: bool = Fal
                 elif empty_streak[rc] >= OCCUPANCY_CONFIRM_FRAMES:
                     board[rc] = "empty"
 
-            # Delay bookkeeping so cooldown starts closer to actual placement time
-            # (after the place click), not at seed selection click.
             if pending_plant is not None:
                 p_name, p_row, p_col, commit_at, timeout_at = pending_plant
                 if now >= commit_at:
@@ -520,7 +511,6 @@ def run(yolo_path: str, cnn_path: str, conf: float, imgsz: int, show: bool = Fal
                         pending_plant = None
                         pending_confirm_streak = 0
 
-            # Keep sun path color handling consistent with tools/sun_collector.py.
             frame_for_sun = cv2.cvtColor(frame_bgr, cv2.COLOR_RGB2BGR)
             sun_detected, collected, sun_clicked_pos = collect_suns(
                 frame_for_sun,
@@ -531,14 +521,12 @@ def run(yolo_path: str, cnn_path: str, conf: float, imgsz: int, show: bool = Fal
                 recent_sun_click = sun_clicked_pos
                 recent_sun_click_ttl = SUN_RECENT_BLOCK_FRAMES
             if collected > 0:
-                # Conservative sun accounting: only credit part of clicked suns.
                 sun_credit_buffer += collected * SUN_CREDIT_RATIO
                 credited = int(sun_credit_buffer)
                 if credited > 0:
                     state.add_sun(credited)
                     sun_credit_buffer -= credited
 
-            # Keep only confirmed placed plants that still occupy a cell.
             for (r, c) in list(placed_plants.keys()):
                 if board.get((r, c), "empty") == "empty":
                     placed_plants.pop((r, c), None)
